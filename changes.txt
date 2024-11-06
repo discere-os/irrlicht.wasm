@@ -1,6 +1,7 @@
 --------------------------
 Changes in 1.9 (not yet released)
 
+- Add freeze options for IShadowVolumeSceneNode
 - OpenGL driver no longer drops normals and texture coordinates for EPT_POINTS
 - Fix drawVertexPrimitiveList in OpenGL driver ignoring index buffer for EPT_POINTS and EPT_POINT_SPRITES. 
   It did always draw the vertex array, but still using the primitive count (so often going outside array)
