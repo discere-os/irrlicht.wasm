@@ -829,10 +829,7 @@ void COpenGLDriver::drawVertexPrimitiveList(const void* vertices, u32 vertexCoun
 	// draw everything
 	setRenderStates3DMode();
 
-	if ((pType!=scene::EPT_POINTS) && (pType!=scene::EPT_POINT_SPRITES))
-		CacheHandler->setClientState(true, true, true, true);
-	else
-		CacheHandler->setClientState(true, false, true, false);
+	CacheHandler->setClientState(true, true, true, true);
 
 //due to missing defines in OSX headers, we have to be more specific with this check
 //#if defined(GL_ARB_vertex_array_bgra) || defined(GL_EXT_vertex_array_bgra)
