@@ -1083,7 +1083,7 @@ void COpenGLDriver::renderArray(const void* indexList, u32 primitiveCount,
 				glTexEnvf(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE, GL_TRUE);
 			}
 #endif
-			glDrawArrays(GL_POINTS, 0, primitiveCount);
+			glDrawElements(GL_POINTS, primitiveCount, indexSize, indexList);
 #ifdef GL_ARB_point_sprite
 			if (pType==scene::EPT_POINT_SPRITES && FeatureAvailable[IRR_ARB_point_sprite])
 			{
