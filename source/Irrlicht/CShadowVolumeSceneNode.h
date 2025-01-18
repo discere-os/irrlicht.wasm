@@ -55,6 +55,18 @@ namespace scene
 			return Optimization;
 		}
 
+		//! Get number of shadow volumes the node currently has.
+		virtual u32 getNumShadowVolumes() const
+		{
+			return ShadowVolumesUsed;
+		}
+
+		//! Get the number of shadow volumes which got drawn in the last render() call
+		virtual u32 getNumRenderedShadowVolumes() const
+		{
+			return ShadowVolumesRendered;
+		}
+
 		//! pre render method
 		virtual void OnRegisterSceneNode() IRR_OVERRIDE;
 
@@ -98,6 +110,7 @@ namespace scene
 		u32 IndexCount;
 		u32 VertexCount;
 		u32 ShadowVolumesUsed;
+		u32 ShadowVolumesRendered;
 
 		f32 Infinity;
 		bool UseZFailMethod;
