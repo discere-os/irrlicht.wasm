@@ -1,6 +1,7 @@
 --------------------------
 Changes in 1.9 (not yet released)
 
+- OpenGL no longer updates enabled clipping planes every time ETS_WORLD is set (only on ETS_VIEW now)
 - Bugfix: IMeshManipulater functions recalculateNormals and recalculateTangents no longer create nan's (was caused by getAngleWeight function)
 - Add freeze options for IShadowVolumeSceneNode
 - OpenGL driver no longer drops normals and texture coordinates for EPT_POINTS
