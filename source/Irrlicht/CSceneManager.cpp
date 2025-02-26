@@ -1734,6 +1734,9 @@ void CSceneManager::drawAll()
 		Parameters->setAttribute("drawn_transparent_effect", (s32) TransparentEffectNodeList.size());
 #endif
 		TransparentEffectNodeList.set_used(0);
+
+		if (LightManager)
+			LightManager->OnRenderPassPostRender(CurrentRenderPass);
 	}
 
 	// render custom gui nodes
@@ -1763,6 +1766,9 @@ void CSceneManager::drawAll()
 		Parameters->setAttribute("drawn_gui_nodes", (s32) GuiNodeList.size());
 #endif
 		GuiNodeList.set_used(0);
+
+		if (LightManager)
+			LightManager->OnRenderPassPostRender(CurrentRenderPass);
 	}
 	
 
