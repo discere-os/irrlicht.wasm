@@ -45,7 +45,7 @@ namespace scene
 		}
 
 		//! Set optimization used to create shadow volumes
-		/** Default is ESV_SILHOUETTE_BY_POS. If the shadow 
+		/** Default is ESV_SILHOUETTE_BY_POS. If the shadow
 		looks bad then give ESV_NONE a try (which will be slower). */
 		virtual void setOptimization(ESHADOWVOLUME_OPTIMIZATION optimization) IRR_OVERRIDE;
 
@@ -56,13 +56,13 @@ namespace scene
 		}
 
 		//! Get number of shadow volumes the node currently has.
-		virtual u32 getNumShadowVolumes() const
+		virtual u32 getNumShadowVolumes() const IRR_OVERRIDE
 		{
 			return ShadowVolumesUsed;
 		}
 
 		//! Get the number of shadow volumes which got drawn in the last render() call
-		virtual u32 getNumRenderedShadowVolumes() const
+		virtual u32 getNumRenderedShadowVolumes() const IRR_OVERRIDE
 		{
 			return ShadowVolumesRendered;
 		}
