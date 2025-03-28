@@ -302,7 +302,6 @@ bool CB3DMeshWriter::writeMesh(io::IWriteFile* file, IMesh* const mesh, s32 flag
             const u32 animsize = 12;
             file->write(&animsize, 4);
 
-            const u32 flags = 0;
             f32 fps = skinnedMesh->getAnimationSpeed();
 
             /* B3D file format use integer as keyframe, so there is some potential issues if the model use float as keyframe (Irrlicht use float) with a low animation FPS value
@@ -316,7 +315,8 @@ bool CB3DMeshWriter::writeMesh(io::IWriteFile* file, IMesh* const mesh, s32 flag
             }
             const u32 frames = static_cast<u32>(skinnedMesh->getFrameCount() * animationSpeedMultiplier);
 
-            file->write(&flags, 4);
+            const u32 animFlags = 0;	// unused in the format it seems
+            file->write(&animFlags, 4);
             file->write(&frames, 4);
             file->write(&fps, 4);
         }
