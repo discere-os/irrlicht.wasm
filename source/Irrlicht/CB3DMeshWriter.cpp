@@ -405,8 +405,8 @@ void CB3DMeshWriter::writeJointChunk(io::IWriteFile* file, ISkinnedMesh* mesh, I
             const s32 frame = static_cast<s32>(joint->PositionKeys[i].frame * animationSpeedMultiplier);
             file->write(&frame, 4);
 
-            const core::vector3df pos = joint->PositionKeys[i].position;
-            pos.getAs3Values(floatBuffer);
+            const core::vector3df framePos = joint->PositionKeys[i].position;
+            framePos.getAs3Values(floatBuffer);
             file->write(floatBuffer, 12);
         }
     }
@@ -448,8 +448,8 @@ void CB3DMeshWriter::writeJointChunk(io::IWriteFile* file, ISkinnedMesh* mesh, I
             const s32 frame = static_cast<s32>(joint->ScaleKeys[i].frame * animationSpeedMultiplier);
             file->write(&frame, 4);
 
-            const core::vector3df scale = joint->ScaleKeys[i].scale;
-            scale.getAs3Values(floatBuffer);
+            const core::vector3df frameScale = joint->ScaleKeys[i].scale;
+            frameScale.getAs3Values(floatBuffer);
             file->write(floatBuffer, 12);
         }
     }
