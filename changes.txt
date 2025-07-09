@@ -1,6 +1,7 @@
 --------------------------
 Changes in 1.9 (not yet released)
 
+- Add AutoRepeat and Extended flags to SKeyInput to pass on that info on Windows
 - Can now compile with /utf-8 option in VS. Fixes bug #463. Thanks @Tony Chen for the report.
 - Can now compile with unicode option in VS without having to set _IRR_WCHAR_FILESYSTEM
 - Fix crash in CIrrDeviceLinux::createInputContext when Irrlicht doesn't like any available input styles. Thanks @Ryan C. Gordon for report: https://sourceforge.net/p/irrlicht/bugs/476

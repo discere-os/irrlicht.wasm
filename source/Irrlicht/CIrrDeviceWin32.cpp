@@ -866,10 +866,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			event.KeyInput.Shift = ((allKeys[VK_SHIFT] & 0x80)!=0);
 			event.KeyInput.Control = ((allKeys[VK_CONTROL] & 0x80)!=0);
 
+			WORD keyFlags = HIWORD(lParam);
+			WORD scanCode = LOBYTE(keyFlags);
+			event.KeyInput.Extended = (keyFlags & KF_EXTENDED) == KF_EXTENDED;
+			if (event.KeyInput.Extended)
+				scanCode = MAKEWORD(scanCode, 0xE0);
+			bool wasKeyDown = (keyFlags & KF_REPEAT) == KF_REPEAT;
+			event.KeyInput.AutoRepeat = event.KeyInput.PressedDown && wasKeyDown;
+
 			// Handle unicode and deadkeys in a way that works since Windows 95 and nt4.0
 			// Using ToUnicode instead would be shorter, but would to my knowledge not run on 95 and 98.
 			WORD keyChars[2];
-			UINT scanCode = HIWORD(lParam);
 			int conversionResult = ToAsciiEx(static_cast<UINT>(wParam),scanCode,allKeys,keyChars,0,KEYBOARD_INPUT_HKL);
 			if (conversionResult == 1)
 			{
