@@ -1,6 +1,10 @@
 --------------------------
 Changes in 1.9 (not yet released)
 
+- Switch input key interpretation on Windows from ToAsciiEx to ToUnicode.
+  *** This means the official end of Windows 98 support for Irrlicht as ToUnicode doesn't exits before Windows 2000
+  Last svn version with Windows 98 support is [r6708].
+  Reason is that the way it was done started to become incompatible with Windows 11, so support for one OS had to go.
 - Add AutoRepeat and Extended flags to SKeyInput to pass on that info on Windows
 - Can now compile with /utf-8 option in VS. Fixes bug #463. Thanks @Tony Chen for the report.
 - Can now compile with unicode option in VS without having to set _IRR_WCHAR_FILESYSTEM
