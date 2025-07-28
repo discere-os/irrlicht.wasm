@@ -19,7 +19,7 @@ namespace scene
 		class IVertexList
 		{
 		public:
-			virtual ~IVertexList(){};
+			virtual ~IVertexList() {}
 
 			virtual u32 stride() const =0;
 

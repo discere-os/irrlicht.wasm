@@ -118,7 +118,7 @@ public:
 	virtual void setFloat(f32 floatValue) IRR_OVERRIDE
 	{
 		Value = (s32)floatValue;
-	};
+	}
 
 	virtual void setString(const char* text) IRR_OVERRIDE
 	{
@@ -1622,7 +1622,7 @@ public:
 	virtual void setFloat(f32 floatValue) IRR_OVERRIDE
 	{
 		setInt((s32)floatValue);
-	};
+	}
 
 	virtual void setString(const char* text) IRR_OVERRIDE
 	{
@@ -1736,7 +1736,7 @@ public:
 		{
 			Value = core::stringc((double)floatValue);
 		}
-	};
+	}
 
 	virtual void setString(const char* text) IRR_OVERRIDE
 	{
@@ -1785,7 +1785,7 @@ public:
 			datac8[p] = v;
 			++p;
 		}
-	};
+	}
 
 	virtual void setBinary(void* data, s32 maxLength) IRR_OVERRIDE
 	{
@@ -1800,7 +1800,7 @@ public:
 			getHexStrFromByte(datac8[b], tmp);
 			Value.append(tmp);
 		}
-	};
+	}
 
 	bool IsStringW;
 	core::stringc Value;
@@ -1936,7 +1936,7 @@ public:
 	{
 		OverrideName = filename;
 		setTexture(texture);
-	};
+	}
 
 	void setTexture(video::ITexture* value)
 	{
