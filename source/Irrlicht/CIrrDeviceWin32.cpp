@@ -711,8 +711,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// Handle unicode and deadkeys in a way that works since Windows 95 and nt4.0
 			// Using ToUnicode instead would be shorter, but would to my knowledge not run on 95 and 98.
 			WORD scanCode = LOBYTE(keyFlags);
-			if (event.KeyInput.Extended)
-				scanCode = MAKEWORD(scanCode, 0xE0);
+			//if (event.KeyInput.Extended)	// MSDN had this code to modify scanCode further
+			//	scanCode = MAKEWORD(scanCode, 0xE0); // But this broke ToUnicode p.E. for num-lock '/' key.
 			WCHAR keyChars[6];	// utf-16 code units. We only use first one for now, but let's get more so if there's trouble some day it's easier to debug.
 			UINT wFlags = 1; // we do not support typing alt+number to get a character
 			int unitsWritten = ToUnicode((UINT)wParam, scanCode, allKeys, keyChars, 6, wFlags);
