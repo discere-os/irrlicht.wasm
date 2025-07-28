@@ -1256,7 +1256,7 @@ public:
 
 	virtual core::stringc getString() const IRR_OVERRIDE
 	{
-		char tmp[10];
+		char tmp[34];
 		const video::SColor c = getColor();
 		sprintf(tmp, "%02x%02x%02x%02x", c.getAlpha(), c.getRed(), c.getGreen(), c.getBlue());
 		return core::stringc(tmp);
@@ -1264,7 +1264,7 @@ public:
 
 	virtual core::stringw getStringW() const IRR_OVERRIDE
 	{
-		char tmp[10];
+		char tmp[34];
 		const video::SColor c = getColor();
 		sprintf(tmp, "%02x%02x%02x%02x", c.getAlpha(), c.getRed(), c.getGreen(), c.getBlue());
 		return core::stringw(tmp);
