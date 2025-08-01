@@ -71,7 +71,7 @@ namespace scene
 			{return (video::S3DVertex&)Vertices[index];}
 
 			virtual const video::S3DVertex& operator [](const u32 index) const IRR_OVERRIDE
-			{return (video::S3DVertex&)Vertices[index];}
+			{return (const video::S3DVertex&)Vertices[index];}
 
 			virtual video::S3DVertex& getLast() IRR_OVERRIDE
 			{return (video::S3DVertex&)Vertices.getLast();}

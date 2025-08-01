@@ -202,8 +202,8 @@ bool CMS3DMeshFileLoader::load(io::IReadFile* file)
 
 	// read header
 
-	const u8 *pPtr = (u8*)((void*)buffer);
-	MS3DHeader *pHeader = (MS3DHeader*)pPtr;
+	const u8 *pPtr = buffer;
+	MS3DHeader *pHeader = (MS3DHeader*)buffer;
 	pPtr += sizeof(MS3DHeader);
 
 	if ( strncmp( pHeader->ID, "MS3D000000", 10 ) != 0 )
