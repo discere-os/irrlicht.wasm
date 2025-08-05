@@ -184,6 +184,8 @@ namespace quake3
 			case 2:
 				ret = false;
 				break;
+			default:
+				break;
 		}
 		return ret;
 	}
@@ -207,6 +209,8 @@ namespace quake3
 				break;
 			case 1:
 				ret = video::ECFN_EQUAL;
+				break;
+			default:
 				break;
 		}
 		return ret;
@@ -340,7 +344,8 @@ namespace quake3
 				blendfunc.isTransparent = 1;
 				resolved = 1;
 				break;
-
+			default:
+				break;
 		}
 
 		// use the generic blender

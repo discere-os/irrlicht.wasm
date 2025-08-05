@@ -670,6 +670,7 @@ namespace video
 			case 1: g = value; break;
 			case 2: b = value; break;
 			case 3: a = value; break;
+			default: break;
 			}
 		}
 
