@@ -278,6 +278,8 @@ namespace quake3
 						blendfunc.isTransparent = 1;
 						resolved = 1;
 						break;
+					default:
+						break;
 				} break;
 
 			case video::EBF_ONE:
@@ -296,6 +298,8 @@ namespace quake3
 						blendfunc.isTransparent = 1;
 						resolved = 1;
 						break;
+					default:
+						break;
 				} break;
 
 			case video::EBF_SRC_ALPHA:
@@ -307,6 +311,8 @@ namespace quake3
 						blendfunc.param0 = 1.f/255.f;
 						blendfunc.isTransparent = 1;
 						resolved = 1;
+						break;
+					default:
 						break;
 				} break;
 
