@@ -390,9 +390,10 @@ void CTriangleSelector::getTriangles(core::triangle3df* triangles,
 
 		for (u32 i=0; i<cnt; ++i)
 		{
+			const irr::core::triangle3df& origTriangle = Triangles[i];
 			// This isn't an accurate test, but it's fast, and the
 			// API contract doesn't guarantee complete accuracy.
-			if (Triangles[i].isTotalOutsideBox(tBox))
+			if (origTriangle.isTotalOutsideBox(tBox))
 			   continue;
 
 			while ( i >= BufferRanges[activeRange].RangeStart + BufferRanges[activeRange].RangeSize )
@@ -407,10 +408,9 @@ void CTriangleSelector::getTriangles(core::triangle3df* triangles,
 				triRange.MaterialIndex = BufferRanges[activeRange].MaterialIndex;
 			}
 
-			triangles[triangleCount] = Triangles[i];
-			mat.transformVect(triangles[triangleCount].pointA);
-			mat.transformVect(triangles[triangleCount].pointB);
-			mat.transformVect(triangles[triangleCount].pointC);
+			mat.transformVect(triangles[triangleCount].pointA, origTriangle.pointA);
+			mat.transformVect(triangles[triangleCount].pointB, origTriangle.pointB);
+			mat.transformVect(triangles[triangleCount].pointC, origTriangle.pointC);
 
 			++triangleCount;
 
@@ -425,15 +425,15 @@ void CTriangleSelector::getTriangles(core::triangle3df* triangles,
 	{
 		for (u32 i=0; i<cnt; ++i)
 		{
+			const irr::core::triangle3df& origTriangle = Triangles[i];
 			// This isn't an accurate test, but it's fast, and the
 			// API contract doesn't guarantee complete accuracy.
-			if (Triangles[i].isTotalOutsideBox(tBox))
+			if (origTriangle.isTotalOutsideBox(tBox))
 			   continue;
 
-			triangles[triangleCount] = Triangles[i];
-			mat.transformVect(triangles[triangleCount].pointA);
-			mat.transformVect(triangles[triangleCount].pointB);
-			mat.transformVect(triangles[triangleCount].pointC);
+			mat.transformVect(triangles[triangleCount].pointA, origTriangle.pointA);
+			mat.transformVect(triangles[triangleCount].pointB, origTriangle.pointB);
+			mat.transformVect(triangles[triangleCount].pointC, origTriangle.pointC);
 
 			++triangleCount;
 
