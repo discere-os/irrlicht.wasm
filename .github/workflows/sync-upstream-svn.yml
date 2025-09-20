@@ -1,0 +1,135 @@
+name: Sync Upstream SVN
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync-svn:
+    runs-on: ubuntu-22.04  # Use Ubuntu 22.04 to avoid git-svn package conflicts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git config --global init.defaultBranch trunk
+
+      - name: Install git-svn
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-svn
+
+      - name: Setup SVN remotes if not exists
+        run: |
+          if ! git config --get svn-remote.svn.url; then
+            git svn init https://svn.code.sf.net/p/irrlicht/code/trunk
+          fi
+
+      - name: Fetch SVN changes
+        run: |
+          git svn fetch --all
+
+      - name: Merge SVN changes into trunk branch
+        run: |
+          git checkout trunk || git checkout -b trunk
+
+          # Get the latest SVN commit
+          SVN_COMMIT=$(git log --grep="git-svn-id" --oneline -1 --format="%H" refs/remotes/git-svn)
+          if [ -n "$SVN_COMMIT" ]; then
+            # Check if this commit is already in trunk
+            if ! git merge-base --is-ancestor $SVN_COMMIT HEAD 2>/dev/null; then
+              echo "Merging SVN changes into trunk"
+              git merge --no-ff $SVN_COMMIT -m "Sync with upstream SVN $(date '+%Y-%m-%d')"
+            else
+              echo "No new SVN changes to merge"
+            fi
+          else
+            echo "No SVN commits found"
+          fi
+
+      - name: Push changes
+        run: |
+          if git diff --quiet HEAD~1; then
+            echo "No changes to push"
+          else
+            git push origin trunk
+            echo "Changes pushed to trunk branch"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create issue on sync failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `SVN Sync Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `The daily SVN synchronization failed. Please check the workflow logs and resolve any conflicts manually.
+
+            **Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            **Common Issues:**
+            - SVN repository connection issues
+            - Merge conflicts requiring manual resolution
+            - Authentication problems
+
+            This issue will be automatically closed when the next sync succeeds.`;
+
+            // Check if a similar issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['svn-sync-failure']
+            });
+
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['svn-sync-failure', 'automated']
+              });
+            }
+
+      - name: Close previous sync failure issues
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['svn-sync-failure']
+            });
+
+            for (const issue of issues.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: 'SVN sync has recovered. This issue is now resolved.'
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+            }
