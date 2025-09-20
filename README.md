@@ -31,11 +31,11 @@ The Irrlicht Engine is a high performance realtime 3D engine written in C++. It 
 This port provides:
 
 - **WASM SIMD Optimization**: Vectorized graphics operations for enhanced performance
-- **WebGPU Acceleration**: GPU compute shaders for parallel rendering tasks
+- **WebGPU Acceleration**: GPU compute shaders with external orchestrator support
 - **Modern TypeScript API**: Type-safe interfaces with comprehensive documentation
 - **Browser-Native Integration**: Direct canvas rendering without plugins
 - **Progressive Loading**: Efficient asset streaming for web deployment
-- **Memory Management**: Optimized WASM heap usage for large scenes
+- **Memory Management**: Optimized WASM heap usage with dynamic dependency loading
 
 ## Quick Start
 
@@ -100,10 +100,10 @@ This WebAssembly port is based on the Irrlicht Engine SDK version 1.9. The origi
 The WebAssembly build is optimized for web deployment:
 
 - **SIMD Operations**: 3-4x speedup for vector/matrix calculations
-- **GPU Acceleration**: WebGPU compute for parallel rendering tasks
+- **GPU Acceleration**: WebGPU compute with external coordinator support
 - **Memory Layout**: Optimized data structures for WASM heap efficiency
-- **Asset Loading**: Streaming mesh and texture loading
-- **Rendering Pipeline**: Batched draw calls and state management
+- **Asset Loading**: Streaming mesh and texture loading with dynamic dependencies
+- **Rendering Pipeline**: Batched draw calls and efficient resource sharing
 
 ## License
 

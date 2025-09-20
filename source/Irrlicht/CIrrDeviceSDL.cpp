@@ -39,6 +39,11 @@ namespace irr
 		IVideoDriver* createOpenGLDriver(const SIrrlichtCreationParameters& params,
 				io::IFileSystem* io, CIrrDeviceSDL* device);
 		#endif
+
+		#ifdef _IRR_COMPILE_WITH_WEBGPU_
+		IVideoDriver* createWebGPUDriver(const SIrrlichtCreationParameters& params,
+				io::IFileSystem* io, CIrrDeviceSDL* device);
+		#endif
 	} // end namespace video
 
 } // end namespace irr
@@ -266,6 +271,14 @@ void CIrrDeviceSDL::createDriver()
 		VideoDriver = video::createOpenGLDriver(CreationParams, FileSystem, this);
 		#else
 		os::Printer::log("No OpenGL support compiled in.", ELL_ERROR);
+		#endif
+		break;
+
+	case video::EDT_WEBGPU:
+		#ifdef _IRR_COMPILE_WITH_WEBGPU_
+		VideoDriver = video::createWebGPUDriver(CreationParams, FileSystem, this);
+		#else
+		os::Printer::log("No WebGPU support compiled in.", ELL_ERROR);
 		#endif
 		break;
 

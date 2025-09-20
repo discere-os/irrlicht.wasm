@@ -1,0 +1,361 @@
+name: Irrlicht.wasm CI/CD Pipeline
+
+on:
+  push:
+    branches: [wasm, main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [wasm]
+
+env:
+  EMSCRIPTEN_VERSION: '3.1.50'
+  DENO_VERSION: 'v1.40.0'
+
+jobs:
+  test-dependencies:
+    name: Test Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - name: Check dependencies are available
+        run: |
+          echo "Checking for required dependencies..."
+          ls -la ../zlib.wasm/install/wasm/ || echo "zlib.wasm not built"
+          ls -la ../libpng.wasm/install/wasm/ || echo "libpng.wasm not built"
+          ls -la ../bzip2.wasm/install/wasm/ || echo "bzip2.wasm not built"
+          ls -la ../libjpeg-turbo.wasm/install/wasm/ || echo "libjpeg-turbo.wasm not built"
+
+      - name: Build dependency chain if needed
+        run: |
+          # Build dependencies if not available
+          if [ ! -f "../zlib.wasm/install/wasm/zlib-side.wasm" ]; then
+            echo "Building zlib.wasm..."
+            cd ../zlib.wasm && ./build-dual.sh side && cd -
+          fi
+
+          if [ ! -f "../libpng.wasm/install/wasm/libpng-side.wasm" ]; then
+            echo "Building libpng.wasm..."
+            cd ../libpng.wasm && ./build-dual.sh side && cd -
+          fi
+
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: test-dependencies
+    strategy:
+      matrix:
+        build-type: [main, side]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ env.EMSCRIPTEN_VERSION }}
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - name: Verify Emscripten installation
+        run: |
+          emcc --version
+          em++ --version
+          which emcc
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+
+      - name: Build WASM module (${{ matrix.build-type }})
+        run: |
+          chmod +x build-dual.sh
+          ./build-dual.sh ${{ matrix.build-type }}
+
+      - name: Verify build outputs
+        run: |
+          echo "Build artifacts:"
+          ls -la install/wasm/ || echo "No install directory"
+
+          if [ "${{ matrix.build-type }}" = "main" ]; then
+            test -f install/wasm/irrlicht-main.js || (echo "❌ Main JS not found" && exit 1)
+            test -f install/wasm/irrlicht-main.wasm || (echo "❌ Main WASM not found" && exit 1)
+            echo "✅ MAIN_MODULE build verified"
+          fi
+
+          if [ "${{ matrix.build-type }}" = "side" ]; then
+            test -f install/wasm/irrlicht-side.wasm || (echo "❌ Side WASM not found" && exit 1)
+            echo "✅ SIDE_MODULE build verified"
+          fi
+
+      - name: Check build sizes
+        run: |
+          echo "📦 Build size analysis:"
+          if [ -f "install/wasm/irrlicht-main.js" ]; then
+            echo "MAIN_MODULE JS: $(du -h install/wasm/irrlicht-main.js | cut -f1)"
+            echo "MAIN_MODULE WASM: $(du -h install/wasm/irrlicht-main.wasm | cut -f1)"
+          fi
+          if [ -f "install/wasm/irrlicht-side.wasm" ]; then
+            echo "SIDE_MODULE: $(du -h install/wasm/irrlicht-side.wasm | cut -f1)"
+          fi
+
+      - name: Run tests
+        run: |
+          deno task test
+        env:
+          DENO_UNSTABLE: true
+
+      - name: Run benchmarks
+        run: |
+          deno task bench
+        env:
+          DENO_UNSTABLE: true
+
+      - name: Run format check
+        run: deno task fmt --check
+
+      - name: Run lint check
+        run: deno task lint
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: irrlicht-wasm-${{ matrix.build-type }}
+          path: |
+            install/wasm/
+            src/lib/
+          retention-days: 7
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - name: Download build artifacts (main)
+        uses: actions/download-artifact@v4
+        with:
+          name: irrlicht-wasm-main
+          path: ./
+
+      - name: Download build artifacts (side)
+        uses: actions/download-artifact@v4
+        with:
+          name: irrlicht-wasm-side
+          path: ./
+
+      - name: Run integration tests
+        run: |
+          deno task test:integration
+        env:
+          DENO_UNSTABLE: true
+
+      - name: Run complete demo
+        run: |
+          deno task demo
+        env:
+          DENO_UNSTABLE: true
+
+  performance-analysis:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: irrlicht-wasm-main
+          path: ./
+
+      - name: Run performance benchmarks
+        run: |
+          echo "🚀 Performance Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "======================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Capture benchmark output
+          deno task bench 2>&1 | tee bench_output.txt
+
+          echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat bench_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Analyze build sizes
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Size | Compressed |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|------|------------|" >> $GITHUB_STEP_SUMMARY
+
+          for file in install/wasm/*; do
+            if [[ -f "$file" ]]; then
+              SIZE=$(stat -c%s "$file")
+              COMPRESSED=$(gzip -c "$file" | wc -c)
+              echo "| $(basename $file) | $(numfmt --to=iec $SIZE) | $(numfmt --to=iec $COMPRESSED) |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+  deploy-npm:
+    name: Deploy to NPM
+    runs-on: ubuntu-latest
+    needs: [build-and-test, integration-tests, performance-analysis]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: irrlicht-wasm-main
+          path: ./
+
+      - name: Build NPM package
+        run: deno task build:npm
+
+      - name: Publish to NPM
+        run: |
+          cd npm
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy-cdn:
+    name: Deploy to CDN
+    runs-on: ubuntu-latest
+    needs: [build-and-test, integration-tests]
+    if: github.ref == 'refs/heads/wasm' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: irrlicht-wasm-*
+          merge-multiple: true
+          path: ./artifacts/
+
+      - name: Set version variables
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "IS_RELEASE=true" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+            echo "IS_RELEASE=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Cloudflare R2
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: |
+            # Deploy versioned artifacts
+            r2 object put discere-os-wasm-production/irrlicht/${{ steps.version.outputs.VERSION }}/side/irrlicht-side.wasm --file=artifacts/irrlicht-side.wasm
+            r2 object put discere-os-wasm-production/irrlicht/${{ steps.version.outputs.VERSION }}/main/irrlicht-main.js --file=artifacts/irrlicht-main.js
+            r2 object put discere-os-wasm-production/irrlicht/${{ steps.version.outputs.VERSION }}/main/irrlicht-main.wasm --file=artifacts/irrlicht-main.wasm
+
+            # Update latest if this is a release
+            if [[ "${{ steps.version.outputs.IS_RELEASE }}" == "true" ]]; then
+              r2 object put discere-os-wasm-production/irrlicht/latest/side/irrlicht-side.wasm --file=artifacts/irrlicht-side.wasm
+              r2 object put discere-os-wasm-production/irrlicht/latest/main/irrlicht-main.js --file=artifacts/irrlicht-main.js
+              r2 object put discere-os-wasm-production/irrlicht/latest/main/irrlicht-main.wasm --file=artifacts/irrlicht-main.wasm
+            fi
+
+      - name: Verify deployment
+        run: |
+          sleep 10
+          echo "🌐 Verifying CDN deployment..."
+          curl -f "https://wasm.discere.cloud/irrlicht/${{ steps.version.outputs.VERSION }}/main/irrlicht-main.js" -o /dev/null
+          echo "✅ CDN deployment verified"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep Security Scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: auto
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "🔒 Scanning for hardcoded secrets..."
+          ! grep -r "api.*key\|secret\|token\|password" src/ wasm/ || (echo "❌ Potential secrets found" && exit 1)
+          echo "✅ No hardcoded secrets detected"
+
+      - name: Validate license headers
+        run: |
+          echo "📄 Checking license headers..."
+          for file in src/**/*.ts wasm/*.cpp wasm/*.h; do
+            if [[ -f "$file" ]] && ! head -5 "$file" | grep -q "Copyright\|License"; then
+              echo "⚠️  Missing license header: $file"
+            fi
+          done
+          echo "✅ License header check completed"
+
+  publish-jsr:
+    name: Publish to JSR
+    runs-on: ubuntu-latest
+    needs: [build-and-test, integration-tests, security-scan]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: irrlicht-wasm-main
+          path: ./
+
+      - name: Publish to JSR
+        run: deno publish

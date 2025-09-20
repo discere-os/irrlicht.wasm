@@ -52,6 +52,12 @@ namespace video
 		primitives. */
 		EDT_OPENGL,
 
+		//! WebGPU device, available on modern browsers with WebGPU support.
+		/** Performs hardware accelerated rendering with modern GPU APIs,
+		supports compute shaders, and provides native browser integration
+		with external WebGPU coordinators for resource sharing. */
+		EDT_WEBGPU,
+
 		//! No driver, just for counting the elements
 		EDT_COUNT
 	};
@@ -64,6 +70,7 @@ namespace video
 		"Direct3D 8.1",
 		"Direct3D 9.0c",
 		"OpenGL 1.x/2.x/3.x",
+		"WebGPU 1.0",
 		0
 	};
 
@@ -75,6 +82,7 @@ namespace video
 		"d3d8",
 		"d3d9",
 		"opengl",
+		"webgpu",
 		0
 	};
 

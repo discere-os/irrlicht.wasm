@@ -1,0 +1,101 @@
+# WASM Build Artifacts
+build-dual/
+build-main/
+build-side/
+install/
+dist/
+npm/
+
+# Development artifacts
+node_modules/
+.deno/
+deno.lock
+
+# Build intermediates
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+
+# Emscripten specific
+*.wasm.map
+*.js.map
+*.bc
+emsdk/
+.emscripten*
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+coverage/
+.nyc_output/
+junit.xml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Runtime generated
+*.pid
+*.seed
+*.pid.lock
+
+# WebGPU debugging
+*.spv
+*.spirv
+webgpu-debug/
+
+# Documentation artifacts (generated)
+docs/api/
+docs/coverage/
+
+# Benchmark results
+bench-results/
+perf-results/
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Never ignore source files and key configs
+!source/
+!include/
+!*.cpp
+!*.h
+!*.wgsl
+!deno.json
+!build-*.sh
+!README.md
+!LICENSE
