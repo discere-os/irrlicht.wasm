@@ -7,6 +7,8 @@
  */
 
 #include "CWASMDependencyManager.h"
+#include <emscripten.h>
+#include <emscripten/emscripten.h>
 #include <dlfcn.h>
 #include <cstring>
 #include <cstdio>

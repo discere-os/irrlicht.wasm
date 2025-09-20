@@ -153,7 +153,7 @@ WGPURenderPipeline CWebGPUDriver::createPipeline(const SMaterial& material,
     WGPUBindGroupLayoutDescriptor layoutDesc = {};
     layoutDesc.entryCount = 4;
     layoutDesc.entries = layoutEntries;
-    layoutDesc.label = "Irrlicht Bind Group Layout";
+    layoutDesc.label = { "Irrlicht Bind Group Layout", WGPU_STRLEN };
 
     WGPUBindGroupLayout bindGroupLayout = wgpuDeviceCreateBindGroupLayout(gpu.device, &layoutDesc);
 
@@ -161,7 +161,7 @@ WGPURenderPipeline CWebGPUDriver::createPipeline(const SMaterial& material,
     WGPUPipelineLayoutDescriptor pipelineLayoutDesc = {};
     pipelineLayoutDesc.bindGroupLayoutCount = 1;
     pipelineLayoutDesc.bindGroupLayouts = &bindGroupLayout;
-    pipelineLayoutDesc.label = "Irrlicht Pipeline Layout";
+    pipelineLayoutDesc.label = { "Irrlicht Pipeline Layout", WGPU_STRLEN };
 
     WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(gpu.device, &pipelineLayoutDesc);
 
@@ -171,10 +171,10 @@ WGPURenderPipeline CWebGPUDriver::createPipeline(const SMaterial& material,
 
     switch (vType) {
         case EVT_STANDARD: // S3DVertex
-            attributes[0] = {WGPUVertexFormat_Float32x3, 0, 0}; // position
-            attributes[1] = {WGPUVertexFormat_Float32x3, 12, 1}; // normal
-            attributes[2] = {WGPUVertexFormat_Float32x2, 24, 2}; // texCoord
-            attributes[3] = {WGPUVertexFormat_Unorm8x4, 32, 3}; // color
+            attributes[0] = { .format = WGPUVertexFormat_Float32x3, .offset = 0, .shaderLocation = 0 }; // position
+            attributes[1] = { .format = WGPUVertexFormat_Float32x3, .offset = 12, .shaderLocation = 1 }; // normal
+            attributes[2] = { .format = WGPUVertexFormat_Float32x2, .offset = 24, .shaderLocation = 2 }; // texCoord
+            attributes[3] = { .format = WGPUVertexFormat_Unorm8x4, .offset = 32, .shaderLocation = 3 }; // color
 
             vertexBufferLayout.arrayStride = sizeof(S3DVertex);
             vertexBufferLayout.attributeCount = 4;
@@ -182,10 +182,10 @@ WGPURenderPipeline CWebGPUDriver::createPipeline(const SMaterial& material,
             break;
 
         case EVT_2TCOORDS: // S3DVertex2TCoords
-            attributes[0] = {WGPUVertexFormat_Float32x3, 0, 0}; // position
-            attributes[1] = {WGPUVertexFormat_Float32x3, 12, 1}; // normal
-            attributes[2] = {WGPUVertexFormat_Float32x2, 24, 2}; // texCoord1
-            attributes[3] = {WGPUVertexFormat_Unorm8x4, 40, 3}; // color
+            attributes[0] = { .format = WGPUVertexFormat_Float32x3, .offset = 0, .shaderLocation = 0 }; // position
+            attributes[1] = { .format = WGPUVertexFormat_Float32x3, .offset = 12, .shaderLocation = 1 }; // normal
+            attributes[2] = { .format = WGPUVertexFormat_Float32x2, .offset = 24, .shaderLocation = 2 }; // texCoord1
+            attributes[3] = { .format = WGPUVertexFormat_Unorm8x4, .offset = 40, .shaderLocation = 3 }; // color
 
             vertexBufferLayout.arrayStride = sizeof(S3DVertex2TCoords);
             vertexBufferLayout.attributeCount = 4;
@@ -193,10 +193,10 @@ WGPURenderPipeline CWebGPUDriver::createPipeline(const SMaterial& material,
             break;
 
         case EVT_TANGENTS: // S3DVertexTangents
-            attributes[0] = {WGPUVertexFormat_Float32x3, 0, 0}; // position
-            attributes[1] = {WGPUVertexFormat_Float32x3, 12, 1}; // normal
-            attributes[2] = {WGPUVertexFormat_Float32x2, 24, 2}; // texCoord
-            attributes[3] = {WGPUVertexFormat_Unorm8x4, 48, 3}; // color
+            attributes[0] = { .format = WGPUVertexFormat_Float32x3, .offset = 0, .shaderLocation = 0 }; // position
+            attributes[1] = { .format = WGPUVertexFormat_Float32x3, .offset = 12, .shaderLocation = 1 }; // normal
+            attributes[2] = { .format = WGPUVertexFormat_Float32x2, .offset = 24, .shaderLocation = 2 }; // texCoord
+            attributes[3] = { .format = WGPUVertexFormat_Unorm8x4, .offset = 48, .shaderLocation = 3 }; // color
 
             vertexBufferLayout.arrayStride = sizeof(S3DVertexTangents);
             vertexBufferLayout.attributeCount = 4;
@@ -206,19 +206,19 @@ WGPURenderPipeline CWebGPUDriver::createPipeline(const SMaterial& material,
 
     // Configure render pipeline
     WGPURenderPipelineDescriptor pipelineDesc = {};
-    pipelineDesc.label = "Irrlicht Render Pipeline";
+    pipelineDesc.label = { "Irrlicht Render Pipeline", WGPU_STRLEN };
     pipelineDesc.layout = pipelineLayout;
 
     // Vertex stage
     pipelineDesc.vertex.module = vertexShader;
-    pipelineDesc.vertex.entryPoint = "main";
+    pipelineDesc.vertex.entryPoint = { "main", WGPU_STRLEN };
     pipelineDesc.vertex.bufferCount = 1;
     pipelineDesc.vertex.buffers = &vertexBufferLayout;
 
     // Fragment stage
     WGPUFragmentState fragmentState = {};
     fragmentState.module = fragmentShader;
-    fragmentState.entryPoint = "main";
+    fragmentState.entryPoint = { "main", WGPU_STRLEN };
 
     WGPUColorTargetState colorTarget = {};
     colorTarget.format = gpu.swapChainFormat;
@@ -340,7 +340,7 @@ WGPUBindGroup CWebGPUDriver::getOrCreateBindGroup(const SMaterial& material) {
     bindGroupDesc.layout = layout;
     bindGroupDesc.entryCount = 4;
     bindGroupDesc.entries = entries;
-    bindGroupDesc.label = "Irrlicht Material Bind Group";
+    bindGroupDesc.label = { "Irrlicht Material Bind Group", WGPU_STRLEN };
 
     WGPUBindGroup bindGroup = wgpuDeviceCreateBindGroup(gpu.device, &bindGroupDesc);
 
@@ -407,7 +407,7 @@ WGPUTexture CWebGPUDriver::createDefaultTexture() {
     textureDesc.dimension = WGPUTextureDimension_2D;
     textureDesc.format = WGPUTextureFormat_BGRA8Unorm;
     textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
-    textureDesc.label = "Default White Texture";
+    textureDesc.label = { "Default White Texture", WGPU_STRLEN };
 
     WGPUTexture texture = wgpuDeviceCreateTexture(gpu.device, &textureDesc);
 
@@ -458,7 +458,7 @@ void CWebGPUDriver::createDepthTexture() {
     depthDesc.dimension = WGPUTextureDimension_2D;
     depthDesc.format = WGPUTextureFormat_Depth24Plus;
     depthDesc.usage = WGPUTextureUsage_RenderAttachment;
-    depthDesc.label = "Irrlicht Depth Buffer";
+    depthDesc.label = { "Irrlicht Depth Buffer", WGPU_STRLEN };
 
     gpu.depthTexture = wgpuDeviceCreateTexture(gpu.device, &depthDesc);
     gpu.depthTextureView = wgpuTextureCreateView(gpu.depthTexture, nullptr);

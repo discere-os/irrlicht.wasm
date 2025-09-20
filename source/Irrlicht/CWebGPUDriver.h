@@ -22,7 +22,7 @@
 #include "matrix4.h"
 #include "dimension2d.h"
 
-#include <emscripten/html5_webgpu.h>
+#include <webgpu/webgpu.h>
 #include <unordered_map>
 
 namespace irr {
@@ -35,7 +35,7 @@ namespace io {
 
 namespace video {
 
-class CWebGPUDriver : public CNullDriver, public IMaterialRendererServices {
+class CWebGPUDriver : public CNullDriver {
 public:
     CWebGPUDriver(const SIrrlichtCreationParameters& params,
                   io::IFileSystem* io,
@@ -78,47 +78,22 @@ public:
 
     // Texture management
     virtual ITexture* createTexture(const core::dimension2d<u32>& size,
-                                   const io::path& name, ECOLOR_FORMAT format = ECF_A8R8G8B8) IRR_OVERRIDE;
+                                   const io::path& name, ECOLOR_FORMAT format = ECF_A8R8G8B8);
 
-    virtual ITexture* createTexture(const io::path& name, IImage* image) IRR_OVERRIDE;
+    virtual ITexture* createTexture(const io::path& name, IImage* image);
 
     virtual ITexture* createRenderTargetTexture(const core::dimension2d<u32>& size,
-                                               const io::path& name = "rt") IRR_OVERRIDE;
+                                               const io::path& name = "rt");
 
     // Driver identification
     virtual E_DRIVER_TYPE getDriverType() const IRR_OVERRIDE { return EDT_WEBGPU; }
 
     virtual const wchar_t* getName() const IRR_OVERRIDE { return L"WebGPU 1.0 (Irrlicht)"; }
 
-    // Material renderer services
-    virtual void addDynamicLight(const SLight& light) IRR_OVERRIDE;
-
+    // Lighting support
+    virtual s32 addDynamicLight(const SLight& light) IRR_OVERRIDE;
     virtual u32 getMaximalDynamicLightAmount() const IRR_OVERRIDE { return 8; }
-
     virtual void turnLightOn(s32 lightIndex, bool turnOn) IRR_OVERRIDE;
-
-    // GPU programming services
-    virtual s32 addShaderMaterial(const c8* vertexShaderProgram = 0,
-                                 const c8* pixelShaderProgram = 0,
-                                 IShaderConstantSetCallBack* callback = 0,
-                                 E_MATERIAL_TYPE baseMaterial = EMT_SOLID,
-                                 s32 userData = 0) IRR_OVERRIDE;
-
-    virtual s32 addHighLevelShaderMaterial(const c8* vertexShaderProgram,
-                                          const c8* vertexShaderEntryPointName,
-                                          E_VERTEX_SHADER_TYPE vsCompileTarget,
-                                          const c8* pixelShaderProgram,
-                                          const c8* pixelShaderEntryPointName,
-                                          E_PIXEL_SHADER_TYPE psCompileTarget,
-                                          const c8* geometryShaderProgram = 0,
-                                          const c8* geometryShaderEntryPointName = "main",
-                                          E_GEOMETRY_SHADER_TYPE gsCompileTarget = EGST_GS_4_0,
-                                          scene::E_PRIMITIVE_TYPE inType = scene::EPT_TRIANGLES,
-                                          scene::E_PRIMITIVE_TYPE outType = scene::EPT_TRIANGLE_STRIP,
-                                          u32 verticesOut = 0,
-                                          IShaderConstantSetCallBack* callback = 0,
-                                          E_MATERIAL_TYPE baseMaterial = EMT_SOLID,
-                                          s32 userData = 0) IRR_OVERRIDE;
 
     // WebGPU-specific methods
     bool initializeWebGPU();
@@ -129,7 +104,7 @@ private:
     struct WebGPUState {
         WGPUDevice device = nullptr;
         WGPUQueue queue = nullptr;
-        WGPUSwapChain swapChain = nullptr;
+        WGPUSurface surface = nullptr;
         WGPUTextureFormat swapChainFormat = WGPUTextureFormat_BGRA8Unorm;
 
         // Render targets
@@ -176,6 +151,7 @@ private:
 
     // Pipeline management
     WGPURenderPipeline getOrCreatePipeline(const SMaterial& material, E_VERTEX_TYPE vType, scene::E_PRIMITIVE_TYPE pType);
+    WGPURenderPipeline createPipeline(const SMaterial& material, E_VERTEX_TYPE vType, scene::E_PRIMITIVE_TYPE pType);
     WGPUBindGroup getOrCreateBindGroup(const SMaterial& material);
     WGPUShaderModule getOrCreateShaderModule(const char* source, const char* label);
 

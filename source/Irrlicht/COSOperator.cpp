@@ -3,6 +3,7 @@
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
 #include "COSOperator.h"
+#include <emscripten.h>
 
 #ifdef _IRR_WINDOWS_API_
 #ifndef _IRR_XBOX_PLATFORM_
@@ -17,12 +18,7 @@
 #endif
 #endif
 
-#if defined(_IRR_COMPILE_WITH_X11_DEVICE_)
-#include "CIrrDeviceLinux.h"
-#endif
-#if defined(_IRR_COMPILE_WITH_OSX_DEVICE_)
-#import <Cocoa/Cocoa.h>
-#endif
+// Platform-specific device includes removed for web-native build
 
 #include "fast_atof.h"
 
@@ -32,7 +28,8 @@ namespace irr
 #if defined(_IRR_COMPILE_WITH_X11_DEVICE_)
 // constructor  linux
 	COSOperator::COSOperator(const core::stringc& osVersion, CIrrDeviceLinux* device)
-: OperatingSystem(osVersion), IrrDeviceLinux(device)
+: OperatingSystem(osVersion)
+// IrrDeviceLinux removed for web-native build
 {
 }
 #endif
@@ -95,11 +92,17 @@ void COSOperator::copyToClipboard(const c8* text) const
         [board setString:str forType:NSStringPboardType];
     }
 
-#elif defined(_IRR_COMPILE_WITH_X11_DEVICE_)
-    if ( IrrDeviceLinux )
-        IrrDeviceLinux->copyToClipboard(text);
 #else
-
+    // Web-native build: Use modern browser clipboard API
+    EM_ASM({
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(UTF8ToString($0)).catch(err => {
+                console.warn('Clipboard write failed:', err);
+            });
+        } else {
+            console.warn('Clipboard API not available');
+        }
+    }, text);
 #endif
 }
 
@@ -136,9 +139,10 @@ const c8* COSOperator::getTextFromClipboard() const
     return (result);
 
 #elif defined(_IRR_COMPILE_WITH_X11_DEVICE_)
-    if ( IrrDeviceLinux )
-        return IrrDeviceLinux->getTextFromClipboard();
-    return 0;
+    // Web-native build: Browser clipboard read requires user interaction
+    // Return empty string as clipboard read needs async handling
+    static const c8 emptyString[] = "";
+    return emptyString;
 
 #else
 

@@ -10,7 +10,7 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include "irrlicht.h"
-#include "dependency_manager.h"
+#include "CWASMDependencyManager.h"
 
 using namespace irr;
 using namespace core;
@@ -328,8 +328,8 @@ EMSCRIPTEN_KEEPALIVE
 bool irrlicht_webgpu_init() {
     if (!g_device) return false;
 
-    // Initialize orchestrator integration
-    irrlicht_init_orchestrator();
+    // Initialize orchestrator integration (placeholder)
+    // irrlicht_init_orchestrator();
 
     // Additional WebGPU initialization if needed
     IVideoDriver* driver = g_device->getVideoDriver();
@@ -343,7 +343,7 @@ bool irrlicht_webgpu_init() {
 
 EMSCRIPTEN_KEEPALIVE
 bool irrlicht_webgpu_orchestrator_available() {
-    return irrlicht_orchestrator_available() == 1;
+    return false; // Placeholder for orchestrator availability
 }
 
 // Error handling

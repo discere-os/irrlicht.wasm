@@ -17,7 +17,7 @@ Deno.test("Irrlicht module initialization", async () => {
 
 Deno.test("Device capabilities detection", async () => {
   const engine = new Irrlicht({
-    driverType: DriverType.NULL,
+    driverType: DriverType.WEBGPU,  // Test our Phase 2 WebGPU driver
     windowSize: { width: 800, height: 600 },
     loadingOptions: { useSideModules: false }
   });
@@ -26,8 +26,8 @@ Deno.test("Device capabilities detection", async () => {
 
   const capabilities = engine.getCapabilities();
   assertExists(capabilities);
-  // Driver type should be NULL for minimal implementation
-  assertEquals(capabilities.driverType, DriverType.NULL);
+  // Driver type should be WEBGPU for Phase 2 implementation
+  assertEquals(capabilities.driverType, DriverType.WEBGPU);
   assertExists(capabilities.driverName);
   assert(typeof capabilities.simdSupported === 'boolean');
 
