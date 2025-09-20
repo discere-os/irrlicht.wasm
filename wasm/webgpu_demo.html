@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irrlicht.wasm GPU-Driven Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .render-area {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .canvas-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #webgpuCanvas {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            background: #000;
+            display: block;
+        }
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .control-group {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        button {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status-indicator {
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-success { background: #4CAF50; }
+        .status-warning { background: #FF9800; }
+        .status-error { background: #f44336; }
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .perf-metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .perf-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .perf-label {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .engine-stats {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="header">
+            <h1>🎮 Irrlicht.wasm GPU-Driven Development Demo</h1>
+            <p>Real-time 3D engine with WebGPU acceleration and SIMD optimization</p>
+            <div class="status-indicators">
+                <span class="status-indicator" id="webgpuIndicator">WebGPU: Checking...</span>
+                <span class="status-indicator" id="simdIndicator">SIMD: Checking...</span>
+                <span class="status-indicator" id="engineIndicator">Engine: Loading...</span>
+            </div>
+        </div>
+
+        <div class="render-area">
+            <div class="canvas-section">
+                <h2>🎨 WebGPU Render Surface</h2>
+                <canvas id="webgpuCanvas" width="800" height="500"></canvas>
+                <div style="margin-top: 10px; text-align: center;">
+                    <button onclick="initRenderer()" id="initWebGPUBtn">🚀 Initialize WebGPU</button>
+                    <button onclick="renderTriangle()" id="triangleBtn" disabled>🔺 Render Triangle</button>
+                    <button onclick="renderCube()" id="cubeBtn" disabled>🧊 Render Cube</button>
+                    <button onclick="startAnimation()" id="animBtn" disabled>🎬 Animate</button>
+                </div>
+                <div id="renderStatus" style="text-align: center; margin-top: 10px; font-weight: bold;">
+                    Ready to initialize WebGPU rendering
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>🚀 Engine Features</h3>
+                    <button onclick="testSIMDMatrix()">🧮 Matrix SIMD (4x)</button>
+                    <button onclick="testGPUCulling()">🎯 GPU Culling (100K)</button>
+                    <button onclick="testMemoryPools()">🧠 Memory Pools</button>
+                    <button onclick="testRenderBatching()">📦 Render Batching</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>📊 Performance Metrics</h3>
+                    <div class="performance-grid">
+                        <div class="perf-metric">
+                            <div class="perf-value" id="fpsValue">--</div>
+                            <div class="perf-label">FPS</div>
+                        </div>
+                        <div class="perf-metric">
+                            <div class="perf-value" id="frameTimeValue">--</div>
+                            <div class="perf-label">Frame Time</div>
+                        </div>
+                        <div class="perf-metric">
+                            <div class="perf-value" id="drawCallsValue">--</div>
+                            <div class="perf-label">Draw Calls</div>
+                        </div>
+                        <div class="perf-metric">
+                            <div class="perf-value" id="trianglesValue">--</div>
+                            <div class="perf-label">Triangles</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎮 Scene Controls</h3>
+                    <button onclick="addRandomObjects()">➕ Add Objects</button>
+                    <button onclick="clearScene()">🧹 Clear Scene</button>
+                    <button onclick="resetCamera()">📷 Reset Camera</button>
+                    <div style="margin-top: 10px;">
+                        <label>Object Count: </label>
+                        <input type="range" id="objectCount" min="1" max="1000" value="100"
+                               oninput="updateObjectCount(this.value)">
+                        <span id="objectCountValue">100</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="engine-stats" id="engineStats">
+            <div>🎯 Irrlicht.wasm Development Console</div>
+            <div>GPU-driven 3D engine with WebGPU acceleration</div>
+            <div>Ready for live development and real-time testing...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Global state
+        let webgpuDevice = null;
+        let webgpuContext = null;
+        let renderPipeline = null;
+        let animationId = null;
+        let irrlichtModule = null;
+        let frameCount = 0;
+        let lastFrameTime = performance.now();
+
+        // Logging function
+        function log(message) {
+            const stats = document.getElementById('engineStats');
+            const timestamp = new Date().toLocaleTimeString();
+            stats.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            stats.scrollTop = stats.scrollHeight;
+        }
+
+        // Initialize WebGPU
+        window.initRenderer = async function() {
+            try {
+                log('🚀 Initializing WebGPU for 3D rendering...');
+
+                const canvas = document.getElementById('webgpuCanvas');
+
+                // Check WebGPU support
+                if (!navigator.gpu) {
+                    updateStatus('webgpuIndicator', '❌ Not Supported', 'status-error');
+                    log('❌ WebGPU not available - use Chrome 113+ or Edge 113+');
+                    return;
+                }
+
+                // Request adapter
+                const adapter = await navigator.gpu.requestAdapter({
+                    powerPreference: 'high-performance'
+                });
+
+                if (!adapter) {
+                    updateStatus('webgpuIndicator', '❌ No Adapter', 'status-error');
+                    log('❌ Failed to get WebGPU adapter');
+                    return;
+                }
+
+                // Request device
+                webgpuDevice = await adapter.requestDevice();
+
+                // Configure canvas
+                webgpuContext = canvas.getContext('webgpu');
+                webgpuContext.configure({
+                    device: webgpuDevice,
+                    format: 'bgra8unorm',
+                    alphaMode: 'premultiplied'
+                });
+
+                // Create simple triangle pipeline
+                await createTrianglePipeline();
+
+                // Enable controls
+                ['triangleBtn', 'cubeBtn', 'animBtn'].forEach(id => {
+                    document.getElementById(id).disabled = false;
+                });
+
+                updateStatus('webgpuIndicator', '✅ Ready', 'status-success');
+                document.getElementById('renderStatus').innerHTML = '✅ WebGPU initialized - Ready for 3D rendering';
+
+                log('✅ WebGPU renderer initialized successfully');
+
+            } catch (error) {
+                updateStatus('webgpuIndicator', '❌ Failed', 'status-error');
+                document.getElementById('renderStatus').innerHTML =
+                    `❌ WebGPU initialization failed: ${error.message}`;
+                log(`❌ WebGPU initialization error: \${error}`);
+            }
+        };
+
+        // Create triangle rendering pipeline
+        async function createTrianglePipeline() {
+            const shaderCode = `
+                @vertex
+                fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
+                    var pos = array<vec2f, 3>(
+                        vec2f( 0.0,  0.8),  // Top
+                        vec2f(-0.8, -0.8),  // Bottom left
+                        vec2f( 0.8, -0.8)   // Bottom right
+                    );
+                    return vec4f(pos[vertexIndex], 0.0, 1.0);
+                }
+
+                @fragment
+                fn fs_main() -> @location(0) vec4f {
+                    return vec4f(0.3, 0.8, 0.3, 1.0); // Green
+                }
+            `;
+
+            const shaderModule = webgpuDevice.createShaderModule({
+                label: 'Triangle Shader',
+                code: shaderCode
+            });
+
+            renderPipeline = webgpuDevice.createRenderPipeline({
+                label: 'Triangle Pipeline',
+                layout: 'auto',
+                vertex: {
+                    module: shaderModule,
+                    entryPoint: 'vs_main'
+                },
+                fragment: {
+                    module: shaderModule,
+                    entryPoint: 'fs_main',
+                    targets: [{
+                        format: 'bgra8unorm'
+                    }]
+                },
+                primitive: {
+                    topology: 'triangle-list'
+                }
+            });
+
+            log('✅ Triangle rendering pipeline created');
+        }
+
+        // Render triangle
+        window.renderTriangle = function() {
+            if (!webgpuDevice || !renderPipeline) {
+                log('⚠️ WebGPU not ready');
+                return;
+            }
+
+            try {
+                const commandEncoder = webgpuDevice.createCommandEncoder({
+                    label: 'Triangle Render Commands'
+                });
+
+                const renderPass = commandEncoder.beginRenderPass({
+                    label: 'Triangle Render Pass',
+                    colorAttachments: [{
+                        view: webgpuContext.getCurrentTexture().createView(),
+                        clearValue: { r: 0.1, g: 0.1, b: 0.3, a: 1.0 },
+                        loadOp: 'clear',
+                        storeOp: 'store'
+                    }]
+                });
+
+                renderPass.setPipeline(renderPipeline);
+                renderPass.draw(3); // 3 vertices for triangle
+
+                renderPass.end();
+                webgpuDevice.queue.submit([commandEncoder.finish()]);
+
+                updatePerformanceMetrics();
+                document.getElementById('renderStatus').innerHTML = '✅ Triangle rendered successfully';
+                log('✅ Triangle rendered via WebGPU');
+
+            } catch (error) {
+                document.getElementById('renderStatus').innerHTML =
+                    `❌ Triangle render failed: \${error.message}`;
+                log(`❌ Triangle render error: \${error}`);
+            }
+        };
+
+        // Render cube (placeholder)
+        window.renderCube = function() {
+            log('🧊 Cube rendering - using triangle for now');
+            window.renderTriangle(); // Use triangle as placeholder
+        };
+
+        // Start animation
+        window.startAnimation = function() {
+            if (!webgpuDevice || !renderPipeline) {
+                log('⚠️ WebGPU not ready');
+                return;
+            }
+
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+                document.getElementById('animBtn').textContent = '🎬 Animate';
+                log('🛑 Animation stopped');
+                return;
+            }
+
+            log('🎬 Starting 60 FPS animation...');
+            document.getElementById('animBtn').textContent = '🛑 Stop';
+
+            function animate() {
+                if (!animationId) return;
+
+                const time = performance.now() * 0.001; // Convert to seconds
+
+                try {
+                    const commandEncoder = webgpuDevice.createCommandEncoder();
+                    const renderPass = commandEncoder.beginRenderPass({
+                        colorAttachments: [{
+                            view: webgpuContext.getCurrentTexture().createView(),
+                            clearValue: {
+                                r: 0.1 + 0.1 * Math.sin(time),
+                                g: 0.1 + 0.1 * Math.sin(time * 1.1),
+                                b: 0.3 + 0.1 * Math.sin(time * 0.8),
+                                a: 1.0
+                            },
+                            loadOp: 'clear',
+                            storeOp: 'store'
+                        }]
+                    });
+
+                    renderPass.setPipeline(renderPipeline);
+                    renderPass.draw(3);
+                    renderPass.end();
+
+                    webgpuDevice.queue.submit([commandEncoder.finish()]);
+
+                    frameCount++;
+                    updatePerformanceMetrics();
+
+                    animationId = requestAnimationFrame(animate);
+
+                } catch (error) {
+                    log(`❌ Animation error: \${error}`);
+                    window.startAnimation(); // Stop animation
+                }
+            }
+
+            animationId = requestAnimationFrame(animate);
+        };
+
+        // Update performance metrics
+        function updatePerformanceMetrics() {
+            const currentTime = performance.now();
+            const deltaTime = currentTime - lastFrameTime;
+            lastFrameTime = currentTime;
+
+            const fps = deltaTime > 0 ? (1000 / deltaTime).toFixed(1) : '60.0';
+
+            document.getElementById('fpsValue').textContent = fps;
+            document.getElementById('frameTimeValue').textContent = deltaTime.toFixed(1) + 'ms';
+            document.getElementById('drawCallsValue').textContent = '1';
+            document.getElementById('trianglesValue').textContent = '1';
+        }
+
+        // Update status indicators
+        function updateStatus(elementId, text, className) {
+            const element = document.getElementById(elementId);
+            element.textContent = text;
+            element.className = `status-indicator \${className}`;
+        }
+
+        // Test engine features
+        window.testSIMDMatrix = async function() {
+            if (!irrlichtModule) {
+                log('⚠️ Loading Irrlicht module...');
+                await initIrrlicht();
+            }
+
+            log('🧮 Testing SIMD matrix operations...');
+            // Implementation would test actual SIMD functions
+        };
+
+        window.testGPUCulling = function() {
+            log('🎯 Testing GPU-driven culling...');
+            // Implementation would test frustum culling
+        };
+
+        window.testMemoryPools = function() {
+            log('🧠 Testing memory pool architecture...');
+            // Implementation would test memory management
+        };
+
+        window.testRenderBatching = function() {
+            log('📦 Testing render batching optimization...');
+            // Implementation would test draw call batching
+        };
+
+        window.addRandomObjects = function() {
+            log('➕ Adding random objects to scene...');
+            // Implementation would add 3D objects
+        };
+
+        window.clearScene = function() {
+            log('🧹 Clearing 3D scene...');
+            const canvas = document.getElementById('webgpuCanvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        };
+
+        window.resetCamera = function() {
+            log('📷 Resetting camera to default position...');
+            // Implementation would reset 3D camera
+        };
+
+        window.updateObjectCount = function(value) {
+            document.getElementById('objectCountValue').textContent = value;
+        };
+
+        // Initialize Irrlicht module
+        async function initIrrlicht() {
+            try {
+                log('🎮 Loading Irrlicht.wasm module...');
+
+                const moduleFactory = (await import('./install/wasm/irrlicht-main.js')).default;
+                irrlichtModule = await moduleFactory();
+
+                const simdAvailable = irrlichtModule._irrlicht_simd_available();
+
+                updateStatus('simdIndicator', simdAvailable ? '✅ Available' : '⚠️ Fallback',
+                    simdAvailable ? 'status-success' : 'status-warning');
+                updateStatus('engineIndicator', '✅ Loaded', 'status-success');
+
+                log('✅ Irrlicht.wasm loaded successfully');
+                log(`⚡ SIMD: \${simdAvailable ? 'Hardware accelerated' : 'Scalar fallback'}`);
+
+                return true;
+            } catch (error) {
+                updateStatus('engineIndicator', '❌ Failed', 'status-error');
+                log(`❌ Failed to load Irrlicht.wasm: \${error}`);
+                return false;
+            }
+        }
+
+        // Initialize everything
+        async function init() {
+            log('🚀 Initializing Irrlicht.wasm development demo...');
+
+            // Check WebGPU availability immediately
+            if (navigator.gpu) {
+                updateStatus('webgpuIndicator', '✅ Available', 'status-success');
+            } else {
+                updateStatus('webgpuIndicator', '❌ Not Supported', 'status-error');
+                log('❌ WebGPU not available - use Chrome 113+ or Edge 113+');
+            }
+
+            // Load Irrlicht module
+            await initIrrlicht();
+
+            log('✅ Development demo ready!');
+            log('💡 Click "Initialize WebGPU" to start 3D rendering');
+        }
+
+        // Start initialization
+        init();
+    </script>
+</body>
+</html>

@@ -14,6 +14,9 @@
     "fs": "data:application/javascript,export const readFileSync = () => { throw new Error('fs not supported'); }; export default { readFileSync };"
   },
   "tasks": {
+    "dev": "deno run --allow-read --allow-run --allow-write --allow-net dev.ts",
+    "dev:watch": "deno run --allow-read --allow-run --allow-write dev-watch.ts",
+    "dev:serve": "deno run --allow-net --allow-read --allow-run dev-server.ts",
     "demo": "deno run --allow-read --allow-write demo-deno.ts",
     "demo:simple": "deno run --allow-read --allow-write demo-deno-simple.ts",
     "test": "deno test --allow-read --no-check tests/deno/",
@@ -21,7 +24,11 @@
     "test:webgpu": "deno test --allow-read --no-check tests/deno/webgpu.test.ts",
     "test:rendering": "deno test --allow-read --no-check tests/deno/rendering.test.ts",
     "test:integration": "deno test --allow-read --no-check tests/deno/integration.test.ts",
+    "test:gpu": "deno test --allow-read --no-check tests/deno/gpu_simd_test.test.ts",
+    "test:gpu-integration": "deno test --allow-read --no-check tests/deno/gpu_integration.test.ts",
     "bench": "deno bench --allow-read bench/",
+    "bench:gpu": "deno bench --allow-read --no-check bench/gpu_enhanced.bench.ts",
+    "bench:simd": "deno bench --allow-read --no-check bench/simd_enhanced.bench.ts",
     "build": "deno task build:wasm",
     "build:wasm": "./build-dual.sh all",
     "build:side": "./build-dual.sh side",
